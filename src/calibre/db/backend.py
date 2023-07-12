@@ -16,6 +16,9 @@ import stat
 import sys
 import time
 import uuid
+
+import re
+
 from contextlib import closing, suppress
 from functools import partial
 
@@ -66,6 +69,8 @@ CUSTOM_DATA_TYPES = frozenset(('rating', 'text', 'comments', 'datetime',
     'int', 'float', 'bool', 'series', 'composite', 'enumeration'))
 WINDOWS_RESERVED_NAMES = frozenset('CON PRN AUX NUL COM1 COM2 COM3 COM4 COM5 COM6 COM7 COM8 COM9 LPT1 LPT2 LPT3 LPT4 LPT5 LPT6 LPT7 LPT8 LPT9'.split())
 
+def safe_filename(filename):
+    return re.sub(r"[\/\\\:\*\?\"\<\>\|]", "_", filename)  # 替换为下划线
 
 class DynamicFilter:  # {{{
 
@@ -1357,8 +1362,12 @@ class DB:
         '''
         book_id = BOOK_ID_PATH_TEMPLATE.format(book_id)
         l = self.PATH_LIMIT - (len(book_id) // 2) - 2
-        author = ascii_filename(author)[:l]
-        title  = ascii_filename(title.lstrip())[:l].rstrip()
+        # author = ascii_filename(author)[:l]
+        # title  = ascii_filename(title.lstrip())[:l].rstrip()
+
+        author = safe_filename(author)
+        title  = safe_filename(title)
+        
         if not title:
             title = 'Unknown'[:l]
         try:
@@ -1384,8 +1393,12 @@ class DB:
         l = (self.PATH_LIMIT - (extlen // 2) - 2) if iswindows else ((self.PATH_LIMIT - extlen - 2) // 2)
         if l < 5:
             raise ValueError('Extension length too long: %d' % extlen)
-        author = ascii_filename(author)[:l]
-        title  = ascii_filename(title.lstrip())[:l].rstrip()
+        # author = ascii_filename(author)[:l]
+        # title  = ascii_filename(title.lstrip())[:l].rstrip()
+
+        author = safe_filename(author)
+        title  = safe_filename(title)
+        
         if not title:
             title = 'Unknown'[:l]
         name   = title + ' - ' + author
